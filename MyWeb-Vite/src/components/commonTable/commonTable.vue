@@ -10,7 +10,12 @@
       >
     </div>
 
-    <el-table :data="state.tableData" stripe style="width: 100%">
+    <el-table 
+    :data="state.tableData" 
+    highlight-current-row 
+    stripe 
+    @current-change="handleCurrentChange"
+    style="width: 100%">
       <el-table-column prop="inputDate" label="日期" width="250" />
       <el-table-column prop="title" label="标题" width="180" />
       <el-table-column prop="content" label="正文内容" />
@@ -31,15 +36,16 @@
               v-model="sizeForm.inputDate"
               type="date"
               placeholder="选择时间"
+              :disabled="state.maskTitle == '查看'"
             />
           </el-form-item>
           <el-form-item label="标题">
-            <el-input v-model="sizeForm.title" type="text" autocomplete="off" />
+            <el-input v-model="sizeForm.title" type="text" autocomplete="off" :disabled="state.maskTitle == '查看'" />
           </el-form-item>
           <el-form-item label="正文内容">
-            <el-input v-model="sizeForm.content" type="text" autocomplete="off" />
+            <el-input v-model="sizeForm.content" type="text" autocomplete="off" :disabled="state.maskTitle == '查看'" />
           </el-form-item>
-          <el-button type="primary" @click="addsubmitData">新增</el-button>
+          <el-button v-show="state.maskTitle != '查看'" type="primary" @click="submitData">{{ state.maskTitle }}</el-button>
         </el-form>
       </div>
     </div>
@@ -53,9 +59,8 @@ import { BTNListinterface } from "../../../interface/defaultController";
 import {
   Close
 } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
-import { addCourse, getTableList } from "../../../service/api/backstageController";
-import formart from "../../common/formart";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { addCourse, editCourse, deleteCourse, getTableList, getTableDetail } from "../../../service/api/backstageController";
 
 const $router = useRouter();
 const props = defineProps({
@@ -74,7 +79,13 @@ const state = reactive({
   start: 0,
   limit: 10,
   tableData: [],
-  total: 0
+  total: 0,
+  tableRowVal: {
+    inputDate: '',
+    title: '',
+    content: '',
+    id: ''
+  }
 });
 
 const sizeForm = reactive({
@@ -83,11 +94,39 @@ const sizeForm = reactive({
   content: ""
 });
 
+let windowType : string = ""
+
 //显示操作弹窗
 const buttonPath = function (index: number,type: string) {
-  if(type != "delete"){
+  state.maskTitle = props.buttonlist[index].title;
+  windowType = type;
+  if(type == 'edit' || type == 'detail'){
+    getTableDetail(state.tableRowVal.id, '/backstage').then(res => {
+      let resData = res.data.data;
+      for(let key in resData){
+        sizeForm[key] = resData[key];
+      }
+    });
+  }
+  if(type == 'delete'){
+    alertMessage('确认要删除此条数据?', () => {
+      deleteCourse({ id: state.tableRowVal.id }).then(res => {
+        let resCode = res.data.code;
+        if(resCode == 200){
+          ElMessage({
+            type: 'success',
+            message: '删除成功',
+          });
+        }else{
+          ElMessage({
+            type: 'error',
+            message: res.data.message,
+          });
+        }
+      });
+    });
+  }else{
     state.showMask = true;
-    state.maskTitle = props.buttonlist[index].title;
   }
 };
 
@@ -101,7 +140,7 @@ const closeMask = function(){
 }
 
 //提交表单
-const addsubmitData = function(){
+const submitData = function(type: string){
   if(!sizeForm.inputDate){
     ElMessage.warning("请选择时间");
     return false;
@@ -110,8 +149,8 @@ const addsubmitData = function(){
   }else if(!sizeForm.content){
     ElMessage.warning("请输入正文内容");
   }else{
-    sizeForm.inputDate = formart(sizeForm.inputDate,"YY-MM-DD");
-    addCourse(sizeForm).then(res => {
+    const fn = windowType == 'edit' ? editCourse(sizeForm) : addCourse(sizeForm);
+    fn.then(res => {
       let resData = res.data;
       if(resData.success){
         ElMessage.success(resData.message);
@@ -119,7 +158,7 @@ const addsubmitData = function(){
       }else{
         ElMessage.error(resData.message);
       }
-    })
+    });
   }
 }
 
@@ -137,6 +176,26 @@ const getDataList = (url:string) => {
       ElMessage.error(resData.message);
     }
   })
+}
+
+/* 表格选中 */
+const handleCurrentChange = (val: any) => {
+  state.tableRowVal = val;
+}
+
+const alertMessage = (title: string, fn: Function) => {
+  ElMessageBox.confirm(
+    title,
+    'Warning',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => {
+      fn();
+  })
+    
 }
 
 onMounted(() => {

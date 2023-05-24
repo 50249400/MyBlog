@@ -1,7 +1,6 @@
 <template>
   <div id="Home">
-    <div class="content">
-      <header>
+    <header>
         <div class="hd-top">
           <div
             class="hd-top-item"
@@ -14,7 +13,8 @@
           </div>
         </div>
       </header>
-      <router-view style="flex: 1;"></router-view>
+    <div class="content">
+      <router-view></router-view>
     </div>
   </div>
 </template>
@@ -60,13 +60,14 @@ export default defineComponent({
   height: 100vh;
   background-image: url(../../assets/images/home-bg.jpg);
   background-size: cover;
+  overflow: hidden;
 }
 .content {
   height: inherit;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  header {
+}
+header {
     background: rgba(0, 0, 0, 0.5);
     color: #ffffff;
     .hd-top {
@@ -85,5 +86,4 @@ export default defineComponent({
       }
     }
   }
-}
 </style>

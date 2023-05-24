@@ -10,8 +10,8 @@
     </div>
     <ul v-infinite-scroll="ulLoad" class="infinite-list">
       <li
-        v-for="(item, index) in state.tableData"
-        :key="index"
+        v-for="item in state.tableData"
+        :key="item.id"
         class="infinite-list-item"
       >
         <div class="item-content">
@@ -33,9 +33,9 @@ import { getTableList } from "../../../service/api/backstageController";
 import format from "../../common/formart";
 
 let state = reactive({
-  start: 10,
+  start: 0,
   limit: 10,
-  year: "",
+  year: '2023',
   tableData: [],
   total: 0,
   yearArr: [] as any[]
@@ -53,18 +53,19 @@ const getDataList = (url: string) => {
     year: state.year
   };
   getTableList(requestData, url).then((res) => {
-    let resData = res.data;
-    state.total = resData.data.total;
-    state.yearArr = resData.data.yearArr;
-    let dataList = resData.data.dataList;
+    const { success, message } = res.data;
+    if(!success){
+      ElMessage.error(message);
+      return;
+    }
+    const { total, yearArr, dataList } = res.data.data;
+    state.total = total;
+    state.yearArr = yearArr;
+    state.tableData = dataList;
+    console.log(state.tableData);
     
     for (let val of dataList) {
       val.inputDate = format(val.inputDate, "YY-MM-DD");
-    }
-    state.tableData = dataList;
-
-    if (!resData.success) {
-      ElMessage.error(resData.message);
     }
   });
 };
@@ -84,13 +85,12 @@ onMounted(() => {
 <style lang="scss" scoped>
 #home-career {
     position: relative;
+    padding-top: 20px;
     .year-box{
         width: 200px;
         height: 88%;
         position: absolute;
         left: 5%;
-        top: 50%;
-        transform: translateY(-50%);
         display: flex;
         flex-direction: column;
         .year-career{
@@ -131,7 +131,6 @@ onMounted(() => {
     position: absolute;
     right: 5%;
     top: 50%;
-    transform: translateY(-50%);
   }
   .infinite-list .infinite-list-item {
     margin: 15px 0;

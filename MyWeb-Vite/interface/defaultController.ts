@@ -4,7 +4,8 @@
  */
 interface BTNListinterface{
     title: string,
-    path?: string
+    path?: string,
+    type?: any
 }
 
 export {

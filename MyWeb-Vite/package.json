@@ -14,6 +14,7 @@
     "element-plus": "^2.2.27",
     "sass": "^1.56.2",
     "vue": "^3.2.37",
+    "vue-axios": "^3.5.2",
     "vue-fullpage.js": "^0.2.6",
     "vue-router": "^4.1.5"
   },

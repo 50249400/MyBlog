@@ -26,6 +26,10 @@ export class Request {
          * 请求拦截器
          * 每次请求前，如果存在token则在请求头中携带token
          */
+        // const { token } = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        // if(token){
+        //     this.axiosInstance.defaults.headers['Token'] = token;
+        // }
 
         this.axiosInstance.interceptors.request.use(
             (config: AxiosRequestConfig) => {
